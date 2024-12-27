@@ -22,18 +22,18 @@ jobs:
 
       - name: Build
         env:
-          BASE_PATH: '/evidence_sample' # サブパスを設定
+          BASE_PATH: '/evidence_sample'
         run: |
           npm run sources
           npm run build
 
       - name: Check Build Directory
-        run: ls -R build # デバッグ用ステップ
+        run: ls -R build
 
       - name: Upload Artifacts
         uses: actions/upload-pages-artifact@v3
         with:
-          path: build # 修正済み: build直下を指定
+          path: build
 
   deploy:
     needs: build
@@ -42,6 +42,9 @@ jobs:
     permissions:
       pages: write
       id-token: write
+
+    environment:
+      name: github-pages # ここを追加
 
     steps:
       - name: Deploy

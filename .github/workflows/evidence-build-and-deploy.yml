@@ -1,30 +1,49 @@
-name: Build and Deploy Evidence Project
+name: Deploy to GitHub Pages
 
 on:
   push:
-    branches:
-      - main
+    branches: 'main' # デプロイのトリガーとなるブランチ
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
 
-    - name: Install Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: 16
+      - name: Install dependencies
+        run: npm install
 
-    - name: Install Evidence
-      run: npm install -g @evidence-dev/evidence
+      - name: Build
+        env:
+          BASE_PATH: '/${{ github.event.repository.name }}'
+        run: |
+          npm run sources
+          npm run build
 
-    - name: Build Evidence Project
-      run: evidence build
+      - name: Upload Artifacts
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'build/${{ github.event.repository.name }}'
 
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./build
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
